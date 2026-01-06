@@ -4,17 +4,29 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
+import Temas from "./pages/Temas";
+import Artigos from "./pages/Artigos";
+import Graficos from "./pages/Graficos";
+import Tabelas from "./pages/Tabelas";
 
 
 function Router() {
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Navigation />
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/temas" component={Temas} />
+        <Route path="/artigos" component={Artigos} />
+        <Route path="/graficos" component={Graficos} />
+        <Route path="/tabelas" component={Tabelas} />
+        <Route path="/404" component={NotFound} />
+        {/* Final fallback route */}
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 
