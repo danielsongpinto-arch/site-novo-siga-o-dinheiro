@@ -4,11 +4,14 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ContentProvider } from "./contexts/ContentContext";
 import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
 import Temas from "./pages/Temas";
+import TemaDetalhes from "./pages/TemaDetalhes";
 import Artigos from "./pages/Artigos";
 import Graficos from "./pages/Graficos";
+import GraficosInterativos from "./pages/GraficosInterativos";
 import Tabelas from "./pages/Tabelas";
 
 
@@ -19,8 +22,10 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/temas" component={Temas} />
+        <Route path="/temas/:id" component={TemaDetalhes} />
         <Route path="/artigos" component={Artigos} />
         <Route path="/graficos" component={Graficos} />
+        <Route path="/graficos-interativos" component={GraficosInterativos} />
         <Route path="/tabelas" component={Tabelas} />
         <Route path="/404" component={NotFound} />
         {/* Final fallback route */}
@@ -42,10 +47,12 @@ function App() {
         defaultTheme="dark"
         // switchable
       >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <ContentProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ContentProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

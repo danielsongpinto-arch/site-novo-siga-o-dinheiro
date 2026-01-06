@@ -2,6 +2,7 @@ import { navigationItems } from "@/lib/navigation";
 import { BookOpen, BarChart3, FileText, Home, Menu, Table, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
+import SearchBar from "./SearchBar";
 
 const iconMap = {
   Home,
@@ -24,24 +25,25 @@ export default function Navigation() {
       <div className="container max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/">
-            <a className="flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors">
-              <div className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>
-                Siga o Dinheiro
-              </div>
-            </a>
+          <Link href="/" className="flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors">
+            <div className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>
+              Siga o Dinheiro
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
-            {navigationItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <a className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:text-amber-400 hover:bg-amber-900/20 transition-all">
+          <div className="hidden md:flex items-center gap-4 flex-1 mx-8">
+            <div className="flex-1 max-w-sm">
+              <SearchBar />
+            </div>
+            <div className="flex items-center gap-1">
+              {navigationItems.map((item) => (
+                <Link key={item.href} href={item.href} className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:text-amber-400 hover:bg-amber-900/20 transition-all">
                   {getIcon(item.icon)}
                   <span className="text-sm font-medium">{item.label}</span>
-                </a>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -61,14 +63,14 @@ export default function Navigation() {
         {isOpen && (
           <div className="md:hidden pb-4 space-y-2">
             {navigationItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <a
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:text-amber-400 hover:bg-amber-900/20 transition-all"
-                >
-                  {getIcon(item.icon)}
-                  <span className="text-sm font-medium">{item.label}</span>
-                </a>
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:text-amber-400 hover:bg-amber-900/20 transition-all"
+              >
+                {getIcon(item.icon)}
+                <span className="text-sm font-medium">{item.label}</span>
               </Link>
             ))}
           </div>
