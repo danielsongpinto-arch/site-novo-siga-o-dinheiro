@@ -1,15 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, X } from "lucide-react";
+import { Upload, X, ChevronRight } from "lucide-react";
 import { useRef, useState } from "react";
-
-interface Tema {
-  id: string;
-  titulo: string;
-  descricao: string;
-  conteudo: string;
-  dataAdicionado: string;
-}
+import { useLocation } from "wouter";
+import { useContent, Tema } from "@/contexts/ContentContext";
 
 /**
  * Design Philosophy: Dark Historical Archive
@@ -19,16 +13,8 @@ interface Tema {
  */
 
 export default function Temas() {
-  const [temas, setTemas] = useState<Tema[]>([
-    {
-      id: "1",
-      titulo: "O Sistema Ponzi Nazista",
-      descricao: "Análise de como o sistema de saque funcionava como um esquema de Ponzi",
-      conteudo: "O sistema financeiro nazista dependia de conquistas militares contínuas para financiar a guerra...",
-      dataAdicionado: "2024-01-06",
-    },
-  ]);
-
+  const { temas, addTema, removeTema } = useContent();
+  const [, navigate] = useLocation();
   const [novoTema, setNovoTema] = useState({
     titulo: "",
     descricao: "",
@@ -45,13 +31,9 @@ export default function Temas() {
         conteudo: novoTema.descricao,
         dataAdicionado: new Date().toISOString().split("T")[0],
       };
-      setTemas([...temas, tema]);
+      addTema(tema);
       setNovoTema({ titulo: "", descricao: "" });
     }
-  };
-
-  const handleRemoverTema = (id: string) => {
-    setTemas(temas.filter((t) => t.id !== id));
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +49,7 @@ export default function Temas() {
           conteudo: content,
           dataAdicionado: new Date().toISOString().split("T")[0],
         };
-        setTemas([...temas, tema]);
+        addTema(tema);
       };
       reader.readAsText(file);
     }
@@ -177,26 +159,38 @@ export default function Temas() {
             ) : (
               <div className="grid gap-4">
                 {temas.map((tema) => (
-                  <Card key={tema.id} className="bg-card border-amber-900/30 hover:border-amber-400/50 transition-colors">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-amber-400">{tema.titulo}</CardTitle>
-                          <CardDescription className="text-gray-400">{tema.descricao}</CardDescription>
+                  <div
+                    key={tema.id}
+                    onClick={() => navigate(`/temas/${tema.id}`)}
+                    className="cursor-pointer"
+                  >
+                    <Card className="bg-card border-amber-900/30 hover:border-amber-400/50 hover:shadow-lg transition-all">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-amber-400">{tema.titulo}</CardTitle>
+                              <ChevronRight className="w-5 h-5 text-amber-400/50" />
+                            </div>
+                            <CardDescription className="text-gray-400">{tema.descricao}</CardDescription>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeTema(tema.id);
+                            }}
+                            className="p-2 hover:bg-red-900/20 rounded-lg transition-colors"
+                          >
+                            <X className="w-5 h-5 text-red-400" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleRemoverTema(tema.id)}
-                          className="p-2 hover:bg-red-900/20 rounded-lg transition-colors"
-                        >
-                          <X className="w-5 h-5 text-red-400" />
-                        </button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-gray-400">Adicionado em: {tema.dataAdicionado}</p>
-                      <p className="text-sm text-gray-300 mt-3 line-clamp-2">{tema.conteudo}</p>
-                    </CardContent>
-                  </Card>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-gray-400">Adicionado em: {tema.dataAdicionado}</p>
+                        <p className="text-sm text-gray-300 mt-3 line-clamp-2">{tema.conteudo}</p>
+                      </CardContent>
+                    </Card>
+                  </div>
                 ))}
               </div>
             )}

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingDown, TrendingUp } from "lucide-react";
+import Timeline from "@/components/Timeline";
 
 /**
  * Design Philosophy: Dark Historical Archive
@@ -33,6 +34,9 @@ export default function Home() {
           </p>
         </div>
       </section>
+
+      {/* Timeline Section */}
+      <Timeline />
 
       {/* Main Content - Two Column Layout */}
       <section className="bg-background py-16 md:py-24">
