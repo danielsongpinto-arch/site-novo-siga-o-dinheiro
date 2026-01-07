@@ -1,83 +1,103 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, X } from "lucide-react";
-import { useRef, useState } from "react";
-
-interface Tabela {
-  id: string;
-  titulo: string;
-  descricao: string;
-  colunas: string[];
-  dados: string[][];
-  dataAdicionado: string;
-}
+import { Upload, X, Download, Tag } from "lucide-react";
+import { useRef, useState, useMemo } from "react";
+import { useContent, Tabela } from "@/contexts/ContentContext";
+import FilterBar from "@/components/FilterBar";
+import Pagination from "@/components/Pagination";
+import { useExport } from "@/hooks/useExport";
 
 /**
  * Design Philosophy: Dark Historical Archive
  * - Página para gerenciar tabelas de dados
- * - Upload de arquivos CSV para criar tabelas
- * - Exibição de tabelas já adicionadas
+ * - Upload de arquivos CSV para adicionar novas tabelas
+ * - Filtros avançados, categorias e paginação
  */
 
-export default function Tabelas() {
-  const [tabelas, setTabelas] = useState<Tabela[]>([
-    {
-      id: "1",
-      titulo: "Saque de Ouro por País",
-      descricao: "Quantidade de ouro saqueado de cada país ocupado",
-      colunas: ["País", "Período", "Quantidade (ton)", "Valor (marcos)"],
-      dados: [
-        ["Áustria", "1938", "90", "~2.7 bilhões"],
-        ["Tchecoslováquia", "1939", "32", "~960 milhões"],
-        ["Polônia", "1939-1945", "80", "~2.4 bilhões"],
-        ["França", "1940-1944", "400", "~12 bilhões"],
-        ["Bélgica", "1940-1944", "~50 mi marcos/mês", "~600 bilhões"],
-        ["Holanda", "1940-1944", "~60 mi marcos/mês", "~720 bilhões"],
-      ],
-      dataAdicionado: "2024-01-06",
-    },
-    {
-      id: "2",
-      titulo: "Despesas Militares Totais",
-      descricao: "Distribuição de gastos entre as divisões militares",
-      colunas: ["Divisão", "Percentual", "Descrição"],
-      dados: [
-        ["Wehrmacht", "40%", "Exército terrestre"],
-        ["Luftwaffe", "25%", "Força aérea"],
-        ["Kriegsmarine", "15%", "Marinha"],
-        ["Indústria Bélica", "12%", "Produção de armamentos"],
-        ["Operações", "8%", "Logística e campanhas"],
-      ],
-      dataAdicionado: "2024-01-06",
-    },
-  ]);
+const CATEGORIAS_TABELA = [
+  "Dados Econômicos",
+  "Estatísticas Militares",
+  "Países Ocupados",
+  "Recursos Saqueados",
+  "Cronologia",
+];
 
+const ITEMS_PER_PAGE = 10;
+
+export default function Tabelas() {
+  const { tabelas, addTabela, removeTabela } = useContent();
+  const { exportTableToCSV } = useExport();
   const [novaTabela, setNovaTabela] = useState({
     titulo: "",
     descricao: "",
-    colunas: "",
+    categoria: CATEGORIAS_TABELA[0],
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<{
+    searchTerm: string;
+    dateFrom?: string;
+    dateTo?: string;
+    type?: string;
+  }>({
+    searchTerm: "",
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Aplicar filtros
+  const filteredTabelas = useMemo(() => {
+    let result = tabelas;
+
+    if (filters.searchTerm) {
+      result = result.filter(
+        (t) =>
+          t.titulo.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+          t.descricao.toLowerCase().includes(filters.searchTerm.toLowerCase())
+      );
+    }
+
+    if (filters.type) {
+      result = result.filter((t) => t.categoria === filters.type);
+    }
+
+    if (filters.dateFrom) {
+      result = result.filter((t) => t.dataAdicionado >= filters.dateFrom!);
+    }
+
+    if (filters.dateTo) {
+      result = result.filter((t) => t.dataAdicionado <= filters.dateTo!);
+    }
+
+    return result;
+  }, [tabelas, filters]);
+
+  // Paginação
+  const totalPages = Math.ceil(filteredTabelas.length / ITEMS_PER_PAGE);
+  const paginatedTabelas = filteredTabelas.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const handleAdicionarTabela = () => {
-    if (novaTabela.titulo.trim() && novaTabela.colunas.trim()) {
-      const colunas = novaTabela.colunas.split(",").map((c) => c.trim());
+    if (novaTabela.titulo.trim() && novaTabela.descricao.trim()) {
       const tabela: Tabela = {
         id: Date.now().toString(),
         titulo: novaTabela.titulo,
         descricao: novaTabela.descricao,
-        colunas,
-        dados: [],
+        categoria: novaTabela.categoria,
+        colunas: ["Coluna 1", "Coluna 2", "Coluna 3"],
+        dados: [["Dado 1", "Dado 2", "Dado 3"]],
         dataAdicionado: new Date().toISOString().split("T")[0],
       };
-      setTabelas([...tabelas, tabela]);
-      setNovaTabela({ titulo: "", descricao: "", colunas: "" });
+      addTabela(tabela);
+      setNovaTabela({
+        titulo: "",
+        descricao: "",
+        categoria: CATEGORIAS_TABELA[0],
+      });
+      setCurrentPage(1);
     }
-  };
-
-  const handleRemoverTabela = (id: string) => {
-    setTabelas(tabelas.filter((t) => t.id !== id));
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,20 +107,20 @@ export default function Tabelas() {
       reader.onload = (e) => {
         const content = e.target?.result as string;
         const linhas = content.split("\n").filter((l) => l.trim());
-        if (linhas.length > 0) {
-          const colunas = linhas[0].split(",").map((c) => c.trim());
-          const dados = linhas.slice(1).map((l) => l.split(",").map((c) => c.trim()));
+        const colunas = linhas[0]?.split(",") || [];
+        const dados = linhas.slice(1).map((l) => l.split(","));
 
-          const tabela: Tabela = {
-            id: Date.now().toString(),
-            titulo: file.name.replace(/\.[^/.]+$/, ""),
-            descricao: `Importado de: ${file.name}`,
-            colunas,
-            dados,
-            dataAdicionado: new Date().toISOString().split("T")[0],
-          };
-          setTabelas([...tabelas, tabela]);
-        }
+        const tabela: Tabela = {
+          id: Date.now().toString(),
+          titulo: file.name.replace(/\.[^/.]+$/, ""),
+          descricao: `Importado de: ${file.name}`,
+          categoria: CATEGORIAS_TABELA[0],
+          colunas,
+          dados,
+          dataAdicionado: new Date().toISOString().split("T")[0],
+        };
+        addTabela(tabela);
+        setCurrentPage(1);
       };
       reader.readAsText(file);
     }
@@ -115,7 +135,7 @@ export default function Tabelas() {
             Tabelas
           </h1>
           <p className="text-gray-300 text-lg">
-            Explore dados estruturados sobre o saque financeiro nazista
+            Explore dados e estatísticas sobre o sistema financeiro de saque nazista
           </p>
         </div>
       </section>
@@ -134,39 +154,45 @@ export default function Tabelas() {
             <CardContent className="space-y-6">
               {/* Manual Input */}
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Título da Tabela
-                  </label>
-                  <input
-                    type="text"
-                    value={novaTabela.titulo}
-                    onChange={(e) => setNovaTabela({ ...novaTabela, titulo: e.target.value })}
-                    placeholder="Ex: Saque de Ouro por País"
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Título da Tabela
+                    </label>
+                    <input
+                      type="text"
+                      value={novaTabela.titulo}
+                      onChange={(e) => setNovaTabela({ ...novaTabela, titulo: e.target.value })}
+                      placeholder="Ex: Ouro Saqueado por País"
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Categoria
+                    </label>
+                    <select
+                      value={novaTabela.categoria}
+                      onChange={(e) => setNovaTabela({ ...novaTabela, categoria: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    >
+                      {CATEGORIAS_TABELA.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Descrição
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     value={novaTabela.descricao}
                     onChange={(e) => setNovaTabela({ ...novaTabela, descricao: e.target.value })}
-                    placeholder="Descreva a tabela..."
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Nomes das Colunas (separadas por vírgula)
-                  </label>
-                  <input
-                    type="text"
-                    value={novaTabela.colunas}
-                    onChange={(e) => setNovaTabela({ ...novaTabela, colunas: e.target.value })}
-                    placeholder="Ex: País, Período, Quantidade, Valor"
+                    placeholder="Descreva o conteúdo da tabela..."
+                    rows={3}
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
                   />
                 </div>
@@ -208,75 +234,115 @@ export default function Tabelas() {
             </CardContent>
           </Card>
 
+          {/* Filtros */}
+          <FilterBar
+            onFilter={(newFilters) => {
+              setFilters(newFilters);
+              setCurrentPage(1);
+            }}
+            types={CATEGORIAS_TABELA}
+          />
+
           {/* Tabelas List */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-amber-400 mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Tabelas Adicionadas ({tabelas.length})
-            </h2>
-            {tabelas.length === 0 ? (
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-amber-400" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Tabelas Adicionadas
+              </h2>
+              <span className="text-sm text-gray-400">
+                {filteredTabelas.length} tabela{filteredTabelas.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            {filteredTabelas.length === 0 ? (
               <Card className="bg-card border-amber-900/30">
                 <CardContent className="py-12 text-center">
-                  <p className="text-gray-400">Nenhuma tabela adicionada ainda. Comece adicionando uma!</p>
+                  <p className="text-gray-400">
+                    {tabelas.length === 0
+                      ? "Nenhuma tabela adicionada ainda. Comece adicionando uma!"
+                      : "Nenhuma tabela encontrada com esses filtros."}
+                  </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4">
-                {tabelas.map((tabela) => (
-                  <Card key={tabela.id} className="bg-card border-amber-900/30 hover:border-amber-400/50 transition-colors">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-amber-400">{tabela.titulo}</CardTitle>
-                          <CardDescription className="text-gray-400">{tabela.descricao}</CardDescription>
+              <>
+                <div className="grid gap-4">
+                  {paginatedTabelas.map((tabela) => (
+                    <Card key={tabela.id} className="bg-card border-amber-900/30 hover:border-amber-400/50 hover:shadow-lg transition-all">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              {tabela.categoria && (
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/20 border border-amber-900/50 rounded text-xs text-amber-400">
+                                  <Tag className="w-3 h-3" />
+                                  {tabela.categoria}
+                                </span>
+                              )}
+                            </div>
+                            <CardTitle className="text-amber-400">{tabela.titulo}</CardTitle>
+                            <CardDescription className="text-gray-400">{tabela.descricao}</CardDescription>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => exportTableToCSV(tabela.titulo, tabela.colunas, tabela.dados)}
+                              className="p-2 hover:bg-amber-900/20 rounded-lg transition-colors"
+                              title="Baixar como CSV"
+                            >
+                              <Download className="w-5 h-5 text-amber-400" />
+                            </button>
+                            <button
+                              onClick={() => removeTabela(tabela.id)}
+                              className="p-2 hover:bg-red-900/20 rounded-lg transition-colors"
+                            >
+                              <X className="w-5 h-5 text-red-400" />
+                            </button>
+                          </div>
                         </div>
-                        <button
-                          onClick={() => handleRemoverTabela(tabela.id)}
-                          className="p-2 hover:bg-red-900/20 rounded-lg transition-colors"
-                        >
-                          <X className="w-5 h-5 text-red-400" />
-                        </button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-amber-900/30">
-                              {tabela.colunas.map((col, idx) => (
-                                <th
-                                  key={idx}
-                                  className="px-3 py-2 text-left text-amber-400 font-semibold"
-                                >
-                                  {col}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {tabela.dados.slice(0, 3).map((linha, idx) => (
-                              <tr key={idx} className="border-b border-amber-900/20 hover:bg-amber-900/10">
-                                {linha.map((celula, cidx) => (
-                                  <td key={cidx} className="px-3 py-2 text-gray-300">
-                                    {celula}
-                                  </td>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-amber-900/30">
+                                {tabela.colunas.map((col, i) => (
+                                  <th key={i} className="text-left py-2 px-2 text-amber-400 font-semibold">
+                                    {col}
+                                  </th>
                                 ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        {tabela.dados.length > 3 && (
-                          <p className="text-xs text-gray-500 mt-2">
-                            +{tabela.dados.length - 3} linhas adicionais
-                          </p>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-3">
-                        Adicionado em: {tabela.dataAdicionado}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                            </thead>
+                            <tbody>
+                              {tabela.dados.slice(0, 3).map((linha, i) => (
+                                <tr key={i} className="border-b border-amber-900/20 hover:bg-amber-900/10">
+                                  {linha.map((cel, j) => (
+                                    <td key={j} className="py-2 px-2 text-gray-300">
+                                      {cel}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          {tabela.dados.length > 3 && (
+                            <p className="text-xs text-gray-400 mt-2">
+                              ... e mais {tabela.dados.length - 3} linha{tabela.dados.length - 3 !== 1 ? "s" : ""}
+                            </p>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-400 mt-3">Adicionado em: {tabela.dataAdicionado}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Paginação */}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
             )}
           </div>
         </div>

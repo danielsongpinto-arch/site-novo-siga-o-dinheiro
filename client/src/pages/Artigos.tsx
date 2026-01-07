@@ -1,43 +1,83 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, X } from "lucide-react";
-import { useRef, useState } from "react";
-
-interface Artigo {
-  id: string;
-  titulo: string;
-  autor: string;
-  resumo: string;
-  conteudo: string;
-  dataAdicionado: string;
-}
+import { Upload, X, Tag } from "lucide-react";
+import { useRef, useState, useMemo } from "react";
+import { useContent, Artigo } from "@/contexts/ContentContext";
+import FilterBar from "@/components/FilterBar";
+import Pagination from "@/components/Pagination";
 
 /**
  * Design Philosophy: Dark Historical Archive
  * - Página para gerenciar artigos educativos
  * - Upload de documentos para adicionar novos artigos
- * - Exibição de artigos já adicionados
+ * - Filtros avançados, categorias e paginação
  */
 
-export default function Artigos() {
-  const [artigos, setArtigos] = useState<Artigo[]>([
-    {
-      id: "1",
-      titulo: "A Economia da Segunda Guerra Mundial",
-      autor: "Historiador Anônimo",
-      resumo: "Uma análise profunda sobre os mecanismos econômicos que sustentavam a máquina de guerra nazista",
-      conteudo: "A economia nazista era baseada em um modelo insustentável...",
-      dataAdicionado: "2024-01-06",
-    },
-  ]);
+const CATEGORIAS_ARTIGO = [
+  "Análise Econômica",
+  "Documentos Históricos",
+  "Operações Militares",
+  "Impacto Social",
+  "Recuperação de Bens",
+];
 
+const ITEMS_PER_PAGE = 10;
+
+export default function Artigos() {
+  const { artigos, addArtigo, removeArtigo } = useContent();
   const [novoArtigo, setNovoArtigo] = useState({
     titulo: "",
     autor: "",
     resumo: "",
+    categoria: CATEGORIAS_ARTIGO[0],
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<{
+    searchTerm: string;
+    dateFrom?: string;
+    dateTo?: string;
+    type?: string;
+  }>({
+    searchTerm: "",
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Aplicar filtros
+  const filteredArtigos = useMemo(() => {
+    let result = artigos;
+
+    if (filters.searchTerm) {
+      result = result.filter(
+        (a) =>
+          a.titulo.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+          a.resumo.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+          a.autor.toLowerCase().includes(filters.searchTerm.toLowerCase())
+      );
+    }
+
+    if (filters.type) {
+      result = result.filter((a) => a.categoria === filters.type);
+    }
+
+    if (filters.dateFrom) {
+      result = result.filter((a) => a.dataAdicionado >= filters.dateFrom!);
+    }
+
+    if (filters.dateTo) {
+      result = result.filter((a) => a.dataAdicionado <= filters.dateTo!);
+    }
+
+    return result;
+  }, [artigos, filters]);
+
+  // Paginação
+  const totalPages = Math.ceil(filteredArtigos.length / ITEMS_PER_PAGE);
+  const paginatedArtigos = filteredArtigos.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleAdicionarArtigo = () => {
     if (novoArtigo.titulo.trim() && novoArtigo.autor.trim() && novoArtigo.resumo.trim()) {
@@ -47,15 +87,18 @@ export default function Artigos() {
         autor: novoArtigo.autor,
         resumo: novoArtigo.resumo,
         conteudo: novoArtigo.resumo,
+        categoria: novoArtigo.categoria,
         dataAdicionado: new Date().toISOString().split("T")[0],
       };
-      setArtigos([...artigos, artigo]);
-      setNovoArtigo({ titulo: "", autor: "", resumo: "" });
+      addArtigo(artigo);
+      setNovoArtigo({
+        titulo: "",
+        autor: "",
+        resumo: "",
+        categoria: CATEGORIAS_ARTIGO[0],
+      });
+      setCurrentPage(1);
     }
-  };
-
-  const handleRemoverArtigo = (id: string) => {
-    setArtigos(artigos.filter((a) => a.id !== id));
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,11 +111,13 @@ export default function Artigos() {
           id: Date.now().toString(),
           titulo: file.name.replace(/\.[^/.]+$/, ""),
           autor: "Importado",
-          resumo: `Arquivo: ${file.name}`,
+          resumo: `Importado de: ${file.name}`,
           conteudo: content,
+          categoria: CATEGORIAS_ARTIGO[0],
           dataAdicionado: new Date().toISOString().split("T")[0],
         };
-        setArtigos([...artigos, artigo]);
+        addArtigo(artigo);
+        setCurrentPage(1);
       };
       reader.readAsText(file);
     }
@@ -87,7 +132,7 @@ export default function Artigos() {
             Artigos
           </h1>
           <p className="text-gray-300 text-lg">
-            Leia análises detalhadas sobre o sistema financeiro de saque nazista
+            Leia artigos e análises sobre o sistema financeiro de saque nazista
           </p>
         </div>
       </section>
@@ -106,41 +151,61 @@ export default function Artigos() {
             <CardContent className="space-y-6">
               {/* Manual Input */}
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Título do Artigo
-                  </label>
-                  <input
-                    type="text"
-                    value={novoArtigo.titulo}
-                    onChange={(e) => setNovoArtigo({ ...novoArtigo, titulo: e.target.value })}
-                    placeholder="Ex: A Economia da Segunda Guerra Mundial"
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Título do Artigo
+                    </label>
+                    <input
+                      type="text"
+                      value={novoArtigo.titulo}
+                      onChange={(e) => setNovoArtigo({ ...novoArtigo, titulo: e.target.value })}
+                      placeholder="Ex: A Economia de Guerra Nazista"
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Autor
+                    </label>
+                    <input
+                      type="text"
+                      value={novoArtigo.autor}
+                      onChange={(e) => setNovoArtigo({ ...novoArtigo, autor: e.target.value })}
+                      placeholder="Ex: Dr. João Silva"
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Autor
-                  </label>
-                  <input
-                    type="text"
-                    value={novoArtigo.autor}
-                    onChange={(e) => setNovoArtigo({ ...novoArtigo, autor: e.target.value })}
-                    placeholder="Ex: Dr. João Silva"
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Resumo
-                  </label>
-                  <textarea
-                    value={novoArtigo.resumo}
-                    onChange={(e) => setNovoArtigo({ ...novoArtigo, resumo: e.target.value })}
-                    placeholder="Escreva um resumo do artigo..."
-                    rows={4}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Resumo
+                    </label>
+                    <textarea
+                      value={novoArtigo.resumo}
+                      onChange={(e) => setNovoArtigo({ ...novoArtigo, resumo: e.target.value })}
+                      placeholder="Escreva um resumo do artigo..."
+                      rows={3}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Categoria
+                    </label>
+                    <select
+                      value={novoArtigo.categoria}
+                      onChange={(e) => setNovoArtigo({ ...novoArtigo, categoria: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    >
+                      {CATEGORIAS_ARTIGO.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <Button
                   onClick={handleAdicionarArtigo}
@@ -180,42 +245,80 @@ export default function Artigos() {
             </CardContent>
           </Card>
 
+          {/* Filtros */}
+          <FilterBar
+            onFilter={(newFilters) => {
+              setFilters(newFilters);
+              setCurrentPage(1);
+            }}
+            types={CATEGORIAS_ARTIGO}
+          />
+
           {/* Artigos List */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-amber-400 mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Artigos Adicionados ({artigos.length})
-            </h2>
-            {artigos.length === 0 ? (
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-amber-400" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Artigos Adicionados
+              </h2>
+              <span className="text-sm text-gray-400">
+                {filteredArtigos.length} artigo{filteredArtigos.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            {filteredArtigos.length === 0 ? (
               <Card className="bg-card border-amber-900/30">
                 <CardContent className="py-12 text-center">
-                  <p className="text-gray-400">Nenhum artigo adicionado ainda. Comece adicionando um!</p>
+                  <p className="text-gray-400">
+                    {artigos.length === 0
+                      ? "Nenhum artigo adicionado ainda. Comece adicionando um!"
+                      : "Nenhum artigo encontrado com esses filtros."}
+                  </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4">
-                {artigos.map((artigo) => (
-                  <Card key={artigo.id} className="bg-card border-amber-900/30 hover:border-amber-400/50 transition-colors">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-amber-400">{artigo.titulo}</CardTitle>
-                          <CardDescription className="text-gray-400">Por {artigo.autor}</CardDescription>
+              <>
+                <div className="grid gap-4">
+                  {paginatedArtigos.map((artigo) => (
+                    <Card key={artigo.id} className="bg-card border-amber-900/30 hover:border-amber-400/50 hover:shadow-lg transition-all">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              {artigo.categoria && (
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/20 border border-amber-900/50 rounded text-xs text-amber-400">
+                                  <Tag className="w-3 h-3" />
+                                  {artigo.categoria}
+                                </span>
+                              )}
+                            </div>
+                            <CardTitle className="text-amber-400">{artigo.titulo}</CardTitle>
+                            <CardDescription className="text-gray-400 mt-1">
+                              Por {artigo.autor}
+                            </CardDescription>
+                          </div>
+                          <button
+                            onClick={() => removeArtigo(artigo.id)}
+                            className="p-2 hover:bg-red-900/20 rounded-lg transition-colors"
+                          >
+                            <X className="w-5 h-5 text-red-400" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleRemoverArtigo(artigo.id)}
-                          className="p-2 hover:bg-red-900/20 rounded-lg transition-colors"
-                        >
-                          <X className="w-5 h-5 text-red-400" />
-                        </button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-gray-300 mb-2">{artigo.resumo}</p>
-                      <p className="text-xs text-gray-500">Adicionado em: {artigo.dataAdicionado}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-gray-300 mb-3">{artigo.resumo}</p>
+                        <p className="text-sm text-gray-400">Adicionado em: {artigo.dataAdicionado}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Paginação */}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
             )}
           </div>
         </div>

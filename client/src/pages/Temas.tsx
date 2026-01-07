@@ -1,16 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, X, ChevronRight } from "lucide-react";
-import { useRef, useState } from "react";
+import { Upload, X, ChevronRight, Tag } from "lucide-react";
+import { useRef, useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useContent, Tema } from "@/contexts/ContentContext";
+import FilterBar from "@/components/FilterBar";
+import Pagination from "@/components/Pagination";
 
 /**
  * Design Philosophy: Dark Historical Archive
  * - Página para gerenciar temas educativos
  * - Upload de documentos para adicionar novos temas
- * - Exibição de temas já adicionados
+ * - Filtros avançados, categorias e paginação
  */
+
+const CATEGORIAS_TEMA = [
+  "Análise Econômica",
+  "Documentos Históricos",
+  "Operações Militares",
+  "Impacto Social",
+  "Recuperação de Bens",
+];
+
+const ITEMS_PER_PAGE = 10;
 
 export default function Temas() {
   const { temas, addTema, removeTema } = useContent();
@@ -18,9 +30,54 @@ export default function Temas() {
   const [novoTema, setNovoTema] = useState({
     titulo: "",
     descricao: "",
+    categoria: CATEGORIAS_TEMA[0],
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<{
+    searchTerm: string;
+    dateFrom?: string;
+    dateTo?: string;
+    type?: string;
+  }>({
+    searchTerm: "",
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Aplicar filtros
+  const filteredTemas = useMemo(() => {
+    let result = temas;
+
+    if (filters.searchTerm) {
+      result = result.filter(
+        (t) =>
+          t.titulo.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+          t.descricao.toLowerCase().includes(filters.searchTerm.toLowerCase())
+      );
+    }
+
+    if (filters.type) {
+      result = result.filter((t) => t.categoria === filters.type);
+    }
+
+    if (filters.dateFrom) {
+      result = result.filter((t) => t.dataAdicionado >= filters.dateFrom!);
+    }
+
+    if (filters.dateTo) {
+      result = result.filter((t) => t.dataAdicionado <= filters.dateTo!);
+    }
+
+    return result;
+  }, [temas, filters]);
+
+  // Paginação
+  const totalPages = Math.ceil(filteredTemas.length / ITEMS_PER_PAGE);
+  const paginatedTemas = filteredTemas.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleAdicionarTema = () => {
     if (novoTema.titulo.trim() && novoTema.descricao.trim()) {
@@ -29,10 +86,16 @@ export default function Temas() {
         titulo: novoTema.titulo,
         descricao: novoTema.descricao,
         conteudo: novoTema.descricao,
+        categoria: novoTema.categoria,
         dataAdicionado: new Date().toISOString().split("T")[0],
       };
       addTema(tema);
-      setNovoTema({ titulo: "", descricao: "" });
+      setNovoTema({
+        titulo: "",
+        descricao: "",
+        categoria: CATEGORIAS_TEMA[0],
+      });
+      setCurrentPage(1);
     }
   };
 
@@ -47,9 +110,11 @@ export default function Temas() {
           titulo: file.name.replace(/\.[^/.]+$/, ""),
           descricao: `Importado de: ${file.name}`,
           conteudo: content,
+          categoria: CATEGORIAS_TEMA[0],
           dataAdicionado: new Date().toISOString().split("T")[0],
         };
         addTema(tema);
+        setCurrentPage(1);
       };
       reader.readAsText(file);
     }
@@ -95,17 +160,35 @@ export default function Temas() {
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Descrição
-                  </label>
-                  <textarea
-                    value={novoTema.descricao}
-                    onChange={(e) => setNovoTema({ ...novoTema, descricao: e.target.value })}
-                    placeholder="Descreva o tema..."
-                    rows={4}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Descrição
+                    </label>
+                    <textarea
+                      value={novoTema.descricao}
+                      onChange={(e) => setNovoTema({ ...novoTema, descricao: e.target.value })}
+                      placeholder="Descreva o tema..."
+                      rows={3}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Categoria
+                    </label>
+                    <select
+                      value={novoTema.categoria}
+                      onChange={(e) => setNovoTema({ ...novoTema, categoria: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    >
+                      {CATEGORIAS_TEMA.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <Button
                   onClick={handleAdicionarTema}
@@ -145,54 +228,90 @@ export default function Temas() {
             </CardContent>
           </Card>
 
+          {/* Filtros */}
+          <FilterBar
+            onFilter={(newFilters) => {
+              setFilters(newFilters);
+              setCurrentPage(1);
+            }}
+            types={CATEGORIAS_TEMA}
+          />
+
           {/* Temas List */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-amber-400 mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Temas Adicionados ({temas.length})
-            </h2>
-            {temas.length === 0 ? (
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-amber-400" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Temas Adicionados
+              </h2>
+              <span className="text-sm text-gray-400">
+                {filteredTemas.length} tema{filteredTemas.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            {filteredTemas.length === 0 ? (
               <Card className="bg-card border-amber-900/30">
                 <CardContent className="py-12 text-center">
-                  <p className="text-gray-400">Nenhum tema adicionado ainda. Comece adicionando um!</p>
+                  <p className="text-gray-400">
+                    {temas.length === 0
+                      ? "Nenhum tema adicionado ainda. Comece adicionando um!"
+                      : "Nenhum tema encontrado com esses filtros."}
+                  </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4">
-                {temas.map((tema) => (
-                  <div
-                    key={tema.id}
-                    onClick={() => navigate(`/temas/${tema.id}`)}
-                    className="cursor-pointer"
-                  >
-                    <Card className="bg-card border-amber-900/30 hover:border-amber-400/50 hover:shadow-lg transition-all">
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <CardTitle className="text-amber-400">{tema.titulo}</CardTitle>
-                              <ChevronRight className="w-5 h-5 text-amber-400/50" />
+              <>
+                <div className="grid gap-4">
+                  {paginatedTemas.map((tema) => (
+                    <div
+                      key={tema.id}
+                      onClick={() => navigate(`/temas/${tema.id}`)}
+                      className="cursor-pointer"
+                    >
+                      <Card className="bg-card border-amber-900/30 hover:border-amber-400/50 hover:shadow-lg transition-all">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                {tema.categoria && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/20 border border-amber-900/50 rounded text-xs text-amber-400">
+                                    <Tag className="w-3 h-3" />
+                                    {tema.categoria}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CardTitle className="text-amber-400">{tema.titulo}</CardTitle>
+                                <ChevronRight className="w-5 h-5 text-amber-400/50" />
+                              </div>
+                              <CardDescription className="text-gray-400">{tema.descricao}</CardDescription>
                             </div>
-                            <CardDescription className="text-gray-400">{tema.descricao}</CardDescription>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeTema(tema.id);
+                              }}
+                              className="p-2 hover:bg-red-900/20 rounded-lg transition-colors"
+                            >
+                              <X className="w-5 h-5 text-red-400" />
+                            </button>
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeTema(tema.id);
-                            }}
-                            className="p-2 hover:bg-red-900/20 rounded-lg transition-colors"
-                          >
-                            <X className="w-5 h-5 text-red-400" />
-                          </button>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-gray-400">Adicionado em: {tema.dataAdicionado}</p>
-                        <p className="text-sm text-gray-300 mt-3 line-clamp-2">{tema.conteudo}</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ))}
-              </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-gray-400">Adicionado em: {tema.dataAdicionado}</p>
+                          <p className="text-sm text-gray-300 mt-3 line-clamp-2">{tema.conteudo}</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Paginação */}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
             )}
           </div>
         </div>

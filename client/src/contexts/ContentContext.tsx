@@ -5,6 +5,7 @@ export interface Tema {
   titulo: string;
   descricao: string;
   conteudo: string;
+  categoria?: string;
   dataAdicionado: string;
 }
 
@@ -14,6 +15,7 @@ export interface Artigo {
   autor: string;
   resumo: string;
   conteudo: string;
+  categoria?: string;
   dataAdicionado: string;
 }
 
@@ -32,6 +34,7 @@ export interface Tabela {
   descricao: string;
   colunas: string[];
   dados: string[][];
+  categoria?: string;
   dataAdicionado: string;
 }
 
