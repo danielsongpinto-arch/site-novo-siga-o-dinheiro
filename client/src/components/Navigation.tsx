@@ -1,5 +1,5 @@
 import { navigationItems } from "@/lib/navigation";
-import { BookOpen, BarChart3, FileText, Home, Menu, Table, X } from "lucide-react";
+import { BookOpen, BarChart3, FileText, Home, Menu, Table, X, Heart } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
 import SearchBar from "./SearchBar";
@@ -10,6 +10,7 @@ const iconMap = {
   FileText,
   BarChart3,
   Table,
+  Heart,
 };
 
 export default function Navigation() {

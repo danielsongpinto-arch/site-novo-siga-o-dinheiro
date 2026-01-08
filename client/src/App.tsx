@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ContentProvider } from "./contexts/ContentContext";
+import { FavoritesProvider } from "./contexts/FavoritesContext";
 import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
 import Temas from "./pages/Temas";
@@ -13,7 +14,8 @@ import Artigos from "./pages/Artigos";
 import Graficos from "./pages/Graficos";
 import GraficosInterativos from "./pages/GraficosInterativos";
 import Tabelas from "./pages/Tabelas";
-
+import Favoritos from "./pages/Favoritos";
+import Relatorios from "./pages/Relatorios";
 
 function Router() {
   return (
@@ -27,6 +29,8 @@ function Router() {
         <Route path="/graficos" component={Graficos} />
         <Route path="/graficos-interativos" component={GraficosInterativos} />
         <Route path="/tabelas" component={Tabelas} />
+        <Route path="/favoritos" component={Favoritos} />
+        <Route path="/relatorios" component={Relatorios} />
         <Route path="/404" component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -48,10 +52,12 @@ function App() {
         // switchable
       >
         <ContentProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <FavoritesProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </FavoritesProvider>
         </ContentProvider>
       </ThemeProvider>
     </ErrorBoundary>

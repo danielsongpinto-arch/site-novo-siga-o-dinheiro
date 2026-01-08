@@ -24,4 +24,14 @@ export const navigationItems = [
     href: "/tabelas",
     icon: "Table",
   },
+  {
+    label: "Favoritos",
+    href: "/favoritos",
+    icon: "Heart",
+  },
+  {
+    label: "Relatórios",
+    href: "/relatorios",
+    icon: "FileText",
+  },
 ];
