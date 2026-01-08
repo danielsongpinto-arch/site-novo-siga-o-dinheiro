@@ -29,6 +29,7 @@ export default function Artigos() {
     titulo: "",
     autor: "",
     resumo: "",
+    conteudo: "",
     categoria: CATEGORIAS_ARTIGO[0],
   });
 
@@ -86,7 +87,7 @@ export default function Artigos() {
         titulo: novoArtigo.titulo,
         autor: novoArtigo.autor,
         resumo: novoArtigo.resumo,
-        conteudo: novoArtigo.resumo,
+        conteudo: novoArtigo.conteudo || novoArtigo.resumo,
         categoria: novoArtigo.categoria,
         dataAdicionado: new Date().toISOString().split("T")[0],
       };
@@ -95,6 +96,7 @@ export default function Artigos() {
         titulo: "",
         autor: "",
         resumo: "",
+        conteudo: "",
         categoria: CATEGORIAS_ARTIGO[0],
       });
       setCurrentPage(1);
@@ -206,6 +208,18 @@ export default function Artigos() {
                       ))}
                     </select>
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Conteúdo Completo
+                  </label>
+                  <textarea
+                    value={novoArtigo.conteudo}
+                    onChange={(e) => setNovoArtigo({ ...novoArtigo, conteudo: e.target.value })}
+                    placeholder="Escreva o conteúdo completo do artigo aqui..."
+                    rows={6}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  />
                 </div>
                 <Button
                   onClick={handleAdicionarArtigo}
