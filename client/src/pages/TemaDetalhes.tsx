@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useContent } from "@/contexts/ContentContext";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { useRoute, useLocation } from "wouter";
+import CommentsSection from "@/components/CommentsSection";
+import ShareButtons from "@/components/ShareButtons";
 
 /**
  * Design Philosophy: Dark Historical Archive
@@ -83,6 +85,24 @@ export default function TemaDetalhes() {
               Deletar Tema
             </Button>
           </div>
+        </div>
+      </section>
+
+      {/* Compartilhamento */}
+      <section className="py-8 border-t border-amber-900/30">
+        <div className="container max-w-4xl mx-auto px-4">
+          <ShareButtons
+            title={tema.titulo}
+            description={tema.descricao}
+            className="justify-center"
+          />
+        </div>
+      </section>
+
+      {/* Comentários */}
+      <section className="py-12 border-t border-amber-900/30">
+        <div className="container max-w-4xl mx-auto px-4">
+          <CommentsSection itemId={tema.id} itemType="tema" />
         </div>
       </section>
     </div>

@@ -6,6 +6,8 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ContentProvider } from "./contexts/ContentContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
+import { CommentsProvider } from "./contexts/CommentsContext";
+import Dashboard from "./pages/Dashboard";
 import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
 import Temas from "./pages/Temas";
@@ -31,6 +33,7 @@ function Router() {
         <Route path="/tabelas" component={Tabelas} />
         <Route path="/favoritos" component={Favoritos} />
         <Route path="/relatorios" component={Relatorios} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/404" component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -53,10 +56,12 @@ function App() {
       >
         <ContentProvider>
           <FavoritesProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-            </TooltipProvider>
+            <CommentsProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Router />
+              </TooltipProvider>
+            </CommentsProvider>
           </FavoritesProvider>
         </ContentProvider>
       </ThemeProvider>

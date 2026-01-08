@@ -34,4 +34,9 @@ export const navigationItems = [
     href: "/relatorios",
     icon: "FileText",
   },
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: "BarChart3",
+  },
 ];
