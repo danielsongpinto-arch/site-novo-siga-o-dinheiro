@@ -7,6 +7,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { ContentProvider } from "./contexts/ContentContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
 import { CommentsProvider } from "./contexts/CommentsContext";
+import { TagsProvider } from "./contexts/TagsContext";
+import { NotificationsProvider } from "./contexts/NotificationsContext";
 import Dashboard from "./pages/Dashboard";
 import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
@@ -57,10 +59,14 @@ function App() {
         <ContentProvider>
           <FavoritesProvider>
             <CommentsProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Router />
-              </TooltipProvider>
+              <TagsProvider>
+                <NotificationsProvider>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Router />
+                  </TooltipProvider>
+                </NotificationsProvider>
+              </TagsProvider>
             </CommentsProvider>
           </FavoritesProvider>
         </ContentProvider>

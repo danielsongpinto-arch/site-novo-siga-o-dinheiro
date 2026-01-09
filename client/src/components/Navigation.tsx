@@ -3,6 +3,7 @@ import { BookOpen, BarChart3, FileText, Home, Menu, Table, X, Heart } from "luci
 import { useState } from "react";
 import { Link } from "wouter";
 import SearchBar from "./SearchBar";
+import NotificationsPanel from "./NotificationsPanel";
 
 const iconMap = {
   Home,
@@ -37,6 +38,7 @@ export default function Navigation() {
             <div className="flex-1 max-w-sm">
               <SearchBar />
             </div>
+            <NotificationsPanel />
             <div className="flex items-center gap-1">
               {navigationItems.map((item) => (
                 <Link key={item.href} href={item.href} className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:text-amber-400 hover:bg-amber-900/20 transition-all">
