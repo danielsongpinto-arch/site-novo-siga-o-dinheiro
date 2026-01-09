@@ -3,12 +3,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { useServiceWorker } from "./hooks/useServiceWorker";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ContentProvider } from "./contexts/ContentContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
 import { CommentsProvider } from "./contexts/CommentsContext";
 import { TagsProvider } from "./contexts/TagsContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
+import { FollowProvider } from "./contexts/FollowContext";
 import Dashboard from "./pages/Dashboard";
 import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
@@ -20,6 +22,7 @@ import GraficosInterativos from "./pages/GraficosInterativos";
 import Tabelas from "./pages/Tabelas";
 import Favoritos from "./pages/Favoritos";
 import Relatorios from "./pages/Relatorios";
+import Trending from "./pages/Trending";
 
 function Router() {
   return (
@@ -36,6 +39,7 @@ function Router() {
         <Route path="/favoritos" component={Favoritos} />
         <Route path="/relatorios" component={Relatorios} />
         <Route path="/dashboard" component={Dashboard} />
+        <Route path="/trending" component={Trending} />
         <Route path="/404" component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -50,6 +54,7 @@ function Router() {
 // - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
+  useServiceWorker();
   return (
     <ErrorBoundary>
       <ThemeProvider
@@ -61,10 +66,12 @@ function App() {
             <CommentsProvider>
               <TagsProvider>
                 <NotificationsProvider>
-                  <TooltipProvider>
+                  <FollowProvider>
+                    <TooltipProvider>
                     <Toaster />
                     <Router />
-                  </TooltipProvider>
+                    </TooltipProvider>
+                  </FollowProvider>
                 </NotificationsProvider>
               </TagsProvider>
             </CommentsProvider>

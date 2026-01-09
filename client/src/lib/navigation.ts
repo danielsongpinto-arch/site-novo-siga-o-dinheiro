@@ -39,4 +39,9 @@ export const navigationItems = [
     href: "/dashboard",
     icon: "BarChart3",
   },
+  {
+    label: "Trending",
+    href: "/trending",
+    icon: "TrendingUp",
+  },
 ];
