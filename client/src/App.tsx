@@ -11,6 +11,8 @@ import { CommentsProvider } from "./contexts/CommentsContext";
 import { TagsProvider } from "./contexts/TagsContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { FollowProvider } from "./contexts/FollowContext";
+import { RecommendationsProvider } from "./contexts/RecommendationsContext";
+import { useAnalytics } from "./hooks/useAnalytics";
 import Dashboard from "./pages/Dashboard";
 import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
@@ -23,6 +25,7 @@ import Tabelas from "./pages/Tabelas";
 import Favoritos from "./pages/Favoritos";
 import Relatorios from "./pages/Relatorios";
 import Trending from "./pages/Trending";
+import Recomendacoes from "./pages/Recomendacoes";
 
 function Router() {
   return (
@@ -40,6 +43,7 @@ function Router() {
         <Route path="/relatorios" component={Relatorios} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/trending" component={Trending} />
+        <Route path="/recomendacoes" component={Recomendacoes} />
         <Route path="/404" component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -55,6 +59,7 @@ function Router() {
 
 function App() {
   useServiceWorker();
+  useAnalytics();
   return (
     <ErrorBoundary>
       <ThemeProvider
@@ -67,10 +72,12 @@ function App() {
               <TagsProvider>
                 <NotificationsProvider>
                   <FollowProvider>
-                    <TooltipProvider>
-                    <Toaster />
-                    <Router />
-                    </TooltipProvider>
+                    <RecommendationsProvider>
+                      <TooltipProvider>
+                      <Toaster />
+                      <Router />
+                      </TooltipProvider>
+                    </RecommendationsProvider>
                   </FollowProvider>
                 </NotificationsProvider>
               </TagsProvider>

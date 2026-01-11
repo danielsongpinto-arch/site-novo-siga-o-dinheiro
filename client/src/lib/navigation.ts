@@ -44,4 +44,9 @@ export const navigationItems = [
     href: "/trending",
     icon: "TrendingUp",
   },
+  {
+    label: "Recomendações",
+    href: "/recomendacoes",
+    icon: "Lightbulb",
+  },
 ];
