@@ -12,6 +12,7 @@ import { TagsProvider } from "./contexts/TagsContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { FollowProvider } from "./contexts/FollowContext";
 import { RecommendationsProvider } from "./contexts/RecommendationsContext";
+import { NewsletterProvider } from "./contexts/NewsletterContext";
 import { useAnalytics } from "./hooks/useAnalytics";
 import Dashboard from "./pages/Dashboard";
 import Navigation from "./components/Navigation";
@@ -73,10 +74,12 @@ function App() {
                 <NotificationsProvider>
                   <FollowProvider>
                     <RecommendationsProvider>
-                      <TooltipProvider>
-                      <Toaster />
-                      <Router />
-                      </TooltipProvider>
+                      <NewsletterProvider>
+                        <TooltipProvider>
+                        <Toaster />
+                        <Router />
+                        </TooltipProvider>
+                      </NewsletterProvider>
                     </RecommendationsProvider>
                   </FollowProvider>
                 </NotificationsProvider>
