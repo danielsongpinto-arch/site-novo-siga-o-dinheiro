@@ -54,4 +54,9 @@ export const navigationItems = [
     href: "/recomendacoes",
     icon: "Lightbulb",
   },
+  {
+    label: "Perfil",
+    href: "/perfil",
+    icon: "User",
+  },
 ];

@@ -28,6 +28,8 @@ import Relatorios from "./pages/Relatorios";
 import Trending from "./pages/Trending";
 import Leaderboard from "./pages/Leaderboard";
 import Recomendacoes from "./pages/Recomendacoes";
+import Perfil from "./pages/Perfil";
+import { BadgesProvider } from "./contexts/BadgesContext";
 
 function Router() {
   return (
@@ -47,6 +49,7 @@ function Router() {
         <Route path="/trending" component={Trending} />
         <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/recomendacoes" component={Recomendacoes} />
+        <Route path="/perfil" component={Perfil} />
         <Route path={"*"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -77,10 +80,12 @@ function App() {
                   <FollowProvider>
                     <RecommendationsProvider>
                       <NewsletterProvider>
+                      <BadgesProvider>
                         <TooltipProvider>
                         <Toaster />
                         <Router />
                         </TooltipProvider>
+                      </BadgesProvider>
                       </NewsletterProvider>
                     </RecommendationsProvider>
                   </FollowProvider>
