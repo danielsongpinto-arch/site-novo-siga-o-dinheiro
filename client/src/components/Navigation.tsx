@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import SearchBar from "./SearchBar";
 import NotificationsPanel from "./NotificationsPanel";
+import ThemeSwitcher from "./ThemeSwitcher";
 
 const iconMap = {
   Home,
@@ -42,6 +43,7 @@ export default function Navigation() {
             <div className="flex-1 max-w-sm">
               <SearchBar />
             </div>
+            <ThemeSwitcher />
             <NotificationsPanel />
             <div className="flex items-center gap-1">
               {navigationItems.map((item) => (

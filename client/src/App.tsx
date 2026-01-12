@@ -29,6 +29,7 @@ import Trending from "./pages/Trending";
 import Leaderboard from "./pages/Leaderboard";
 import Recomendacoes from "./pages/Recomendacoes";
 import Perfil from "./pages/Perfil";
+import PerfilPublico from "./pages/PerfilPublico";
 import { BadgesProvider } from "./contexts/BadgesContext";
 
 function Router() {
@@ -50,6 +51,7 @@ function Router() {
         <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/recomendacoes" component={Recomendacoes} />
         <Route path="/perfil" component={Perfil} />
+        <Route path="/perfil-publico/:userId" component={PerfilPublico} />
         <Route path={"*"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -70,7 +72,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider
         defaultTheme="dark"
-        // switchable
+        switchable
       >
         <ContentProvider>
           <FavoritesProvider>

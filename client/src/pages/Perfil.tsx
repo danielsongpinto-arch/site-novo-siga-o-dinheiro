@@ -5,9 +5,13 @@ import { useNewsletter } from '@/contexts/NewsletterContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import BadgesDisplay from '@/components/BadgesDisplay';
-import { User, MessageSquare, Heart, Trophy, Mail } from 'lucide-react';
+import { User, MessageSquare, Heart, Trophy, Mail, Share2, Copy, Check } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function Perfil() {
+  const [copied, setCopied] = useState(false);
+  const userId = 'meu-perfil';
   const { comments } = useComments();
   const { favorites } = useFavorites();
   const { getBadgesDesbloqueados } = useBadges();
@@ -54,10 +58,22 @@ export default function Perfil() {
             <div className="w-16 h-16 bg-amber-600/30 rounded-full flex items-center justify-center border border-amber-600">
               <User className="w-8 h-8 text-amber-400" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-4xl font-bold text-amber-400">Meu Perfil</h1>
               <p className="text-gray-300">Acompanhe sua atividade e conquistas</p>
             </div>
+            <Button
+              onClick={() => {
+                const url = `${window.location.origin}/perfil-publico/${userId}`;
+                navigator.clipboard.writeText(url);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="flex items-center gap-2 bg-amber-900/30 hover:bg-amber-900/50 border border-amber-700/50 text-amber-400"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+              {copied ? 'Copiado!' : 'Compartilhar'}
+            </Button>
           </div>
         </div>
       </div>
