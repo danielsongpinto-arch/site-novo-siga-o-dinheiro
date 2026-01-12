@@ -26,6 +26,7 @@ import Tabelas from "./pages/Tabelas";
 import Favoritos from "./pages/Favoritos";
 import Relatorios from "./pages/Relatorios";
 import Trending from "./pages/Trending";
+import Leaderboard from "./pages/Leaderboard";
 import Recomendacoes from "./pages/Recomendacoes";
 
 function Router() {
@@ -44,8 +45,9 @@ function Router() {
         <Route path="/relatorios" component={Relatorios} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/trending" component={Trending} />
+        <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/recomendacoes" component={Recomendacoes} />
-        <Route path="/404" component={NotFound} />
+        <Route path={"*"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
       </Switch>

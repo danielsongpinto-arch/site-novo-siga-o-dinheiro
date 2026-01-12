@@ -8,6 +8,8 @@ export interface Comment {
   conteudo: string;
   dataCriacao: string;
   likes: number;
+  parentId?: string; // Para comentários aninhados
+  replies?: Comment[]; // Respostas ao comentário
 }
 
 interface CommentsContextType {
@@ -16,6 +18,8 @@ interface CommentsContextType {
   removeComment: (id: string) => void;
   likeComment: (id: string) => void;
   getCommentsByItem: (itemId: string, itemType: string) => Comment[];
+  addReply: (parentId: string, reply: Omit<Comment, "id" | "dataCriacao" | "likes" | "parentId" | "replies">) => void;
+  getReplies: (parentId: string) => Comment[];
 }
 
 const CommentsContext = createContext<CommentsContextType | undefined>(undefined);
@@ -63,12 +67,27 @@ export function CommentsProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getCommentsByItem = (itemId: string, itemType: string) => {
-    return comments.filter((c) => c.itemId === itemId && c.itemType === itemType);
+    return comments.filter((c) => c.itemId === itemId && c.itemType === itemType && !c.parentId);
+  };
+
+  const addReply = (parentId: string, reply: Omit<Comment, "id" | "dataCriacao" | "likes" | "parentId" | "replies">) => {
+    const newReply: Comment = {
+      ...reply,
+      id: Date.now().toString(),
+      dataCriacao: new Date().toISOString().split("T")[0],
+      likes: 0,
+      parentId,
+    };
+    setComments([...comments, newReply]);
+  };
+
+  const getReplies = (parentId: string) => {
+    return comments.filter((c) => c.parentId === parentId);
   };
 
   return (
     <CommentsContext.Provider
-      value={{ comments, addComment, removeComment, likeComment, getCommentsByItem }}
+      value={{ comments, addComment, removeComment, likeComment, getCommentsByItem, addReply, getReplies }}
     >
       {children}
     </CommentsContext.Provider>

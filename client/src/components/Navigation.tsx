@@ -1,5 +1,5 @@
 import { navigationItems } from "@/lib/navigation";
-import { BookOpen, BarChart3, FileText, Home, Menu, Table, X, Heart, TrendingUp, Lightbulb } from "lucide-react";
+import { BookOpen, BarChart3, FileText, Home, Menu, Table, X, Heart, TrendingUp, Lightbulb, Trophy } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
 import SearchBar from "./SearchBar";
@@ -14,6 +14,7 @@ const iconMap = {
   Heart,
   TrendingUp,
   Lightbulb,
+  Trophy,
 };
 
 export default function Navigation() {

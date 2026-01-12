@@ -45,6 +45,11 @@ export const navigationItems = [
     icon: "TrendingUp",
   },
   {
+    label: "Leaderboard",
+    href: "/leaderboard",
+    icon: "Trophy",
+  },
+  {
     label: "Recomendações",
     href: "/recomendacoes",
     icon: "Lightbulb",
