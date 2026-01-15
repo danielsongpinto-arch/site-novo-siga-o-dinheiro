@@ -31,6 +31,10 @@ import Recomendacoes from "./pages/Recomendacoes";
 import Perfil from "./pages/Perfil";
 import PerfilPublico from "./pages/PerfilPublico";
 import { BadgesProvider } from "./contexts/BadgesContext";
+import Admin from "./pages/Admin";
+import Login from "./pages/Login";
+import { AuthProvider } from "./contexts/AuthContext";
+import { FirebaseProvider } from "./contexts/FirebaseContext";
 
 function Router() {
   return (
@@ -38,6 +42,8 @@ function Router() {
       <Navigation />
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/login" component={Login} />
+        <Route path="/admin" component={Admin} />
         <Route path="/temas" component={Temas} />
         <Route path="/temas/:id" component={TemaDetalhes} />
         <Route path="/artigos" component={Artigos} />
@@ -74,28 +80,32 @@ function App() {
         defaultTheme="dark"
         switchable
       >
-        <ContentProvider>
-          <FavoritesProvider>
-            <CommentsProvider>
-              <TagsProvider>
-                <NotificationsProvider>
-                  <FollowProvider>
-                    <RecommendationsProvider>
-                      <NewsletterProvider>
-                      <BadgesProvider>
-                        <TooltipProvider>
-                        <Toaster />
-                        <Router />
-                        </TooltipProvider>
-                      </BadgesProvider>
-                      </NewsletterProvider>
-                    </RecommendationsProvider>
-                  </FollowProvider>
-                </NotificationsProvider>
-              </TagsProvider>
-            </CommentsProvider>
-          </FavoritesProvider>
-        </ContentProvider>
+        <AuthProvider>
+          <FirebaseProvider>
+            <ContentProvider>
+              <FavoritesProvider>
+                <CommentsProvider>
+                  <TagsProvider>
+                    <NotificationsProvider>
+                      <FollowProvider>
+                        <RecommendationsProvider>
+                          <NewsletterProvider>
+                            <BadgesProvider>
+                              <TooltipProvider>
+                                <Toaster />
+                                <Router />
+                              </TooltipProvider>
+                            </BadgesProvider>
+                          </NewsletterProvider>
+                        </RecommendationsProvider>
+                      </FollowProvider>
+                    </NotificationsProvider>
+                  </TagsProvider>
+                </CommentsProvider>
+              </FavoritesProvider>
+            </ContentProvider>
+          </FirebaseProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
