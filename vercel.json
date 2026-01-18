@@ -1,9 +1,12 @@
 {
-  "buildCommand": "pnpm build",
-  "outputDirectory": "dist",
+  "version": 2,
   "framework": "vite",
-  "env": {
-    "VITE_APP_TITLE": "Siga o Dinheiro",
-    "VITE_APP_ID": "siga-o-dinheiro-web"
-  }
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist/public",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
